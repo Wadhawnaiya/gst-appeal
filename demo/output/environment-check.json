@@ -1,0 +1,55 @@
+{
+  "installer": null,
+  "notebooklm": {
+    "found": true,
+    "source": "NOTEBOOKLM_CLI",
+    "command": [
+      "/home/wadhawaniya/gst-appeal/caselaws-cli/.venv/bin/notebooklm"
+    ],
+    "version_test": {
+      "ok": true,
+      "returncode": 0,
+      "stdout": "NotebookLM CLI, version 0.5.0",
+      "stderr": "",
+      "cmd": [
+        "/home/wadhawaniya/gst-appeal/caselaws-cli/.venv/bin/notebooklm",
+        "--version"
+      ]
+    },
+    "auth_test": {
+      "ok": false,
+      "returncode": 1,
+      "stdout": "{\n  \"status\": \"error\",\n  \"checks\": {\n    \"storage_exists\": false,\n    \"json_valid\": false,\n    \"cookies_present\": false,\n    \"sid_cookie\": false,\n    \"token_fetch\": null\n  },\n  \"details\": {\n    \"storage_path\": \"/home/wadhawaniya/.notebooklm/profiles/default/storage_state.json\",\n    \"auth_source\": \"file (/home/wadhawaniya/.notebooklm/profiles/default/storage_state.json)\",\n    \"cookies_found\": [],\n    \"cookie_domains\": [],\n    \"error\": \"Storage file not found: /home/wadhawaniya/.notebooklm/profiles/default/storage_state.json\"\n  }\n}",
+      "stderr": "",
+      "cmd": [
+        "/home/wadhawaniya/gst-appeal/caselaws-cli/.venv/bin/notebooklm",
+        "auth",
+        "check",
+        "--test",
+        "--json"
+      ]
+    }
+  },
+  "caselaws_cli": {
+    "found": true,
+    "source": "CASELAWS_CLI",
+    "command": [
+      "/home/wadhawaniya/gst-appeal/caselaws-cli/.venv/bin/python",
+      "-m",
+      "cli_anything.caselaws.main"
+    ],
+    "help_test": {
+      "ok": true,
+      "returncode": 0,
+      "stdout": "Usage: python -m cli_anything.caselaws.main [OPTIONS] COMMAND [ARGS]...\n\n  GST Appeal Research CLI - A powerful tool to search Indian GST case laws and\n  circulars.\n\n  Perfectly structured to integrate with larger plugins and appeal drafting\n  agents.\n\nOptions:\n  --help  Show this message and exit.\n\nCommands:\n  config  Manage CLI settings and credentials (such as Indian Kanoon API...\n  get     Retrieve full text content of a case law or circular.\n  search  Search for relevant GST case laws, GSTAT rulings, or CBIC...",
+      "stderr": "",
+      "cmd": [
+        "/home/wadhawaniya/gst-appeal/caselaws-cli/.venv/bin/python",
+        "-m",
+        "cli_anything.caselaws.main",
+        "--help"
+      ]
+    }
+  },
+  "overall_ok": true
+}

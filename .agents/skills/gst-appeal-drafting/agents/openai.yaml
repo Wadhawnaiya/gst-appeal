@@ -1,0 +1,4 @@
+interface:
+  display_name: "GST Appeal Drafting"
+  short_description: "Draft GST India appeals using NotebookLM and case-law research."
+  default_prompt: "Draft a GST appeal from the uploaded order, facts, and issue list using NotebookLM and case-law research."

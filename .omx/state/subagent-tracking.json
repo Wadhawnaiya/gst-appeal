@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "sessions": {
+    "omx-1779512637560-zpvurn": {
+      "session_id": "omx-1779512637560-zpvurn",
+      "leader_thread_id": "019e5338-1ab7-7380-9194-05d3e8bfe5c7",
+      "updated_at": "2026-05-23T06:27:30.784Z",
+      "threads": {
+        "019e5338-1ab7-7380-9194-05d3e8bfe5c7": {
+          "thread_id": "019e5338-1ab7-7380-9194-05d3e8bfe5c7",
+          "kind": "leader",
+          "first_seen_at": "2026-05-23T06:10:24.581Z",
+          "last_seen_at": "2026-05-23T06:27:30.784Z",
+          "last_turn_id": "019e5382-ee27-79a1-8e3a-b219674a167d",
+          "turn_count": 3
+        }
+      }
+    }
+  }
+}
