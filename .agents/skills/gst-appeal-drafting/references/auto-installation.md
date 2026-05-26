@@ -2,6 +2,17 @@
 
 When a user asks to use the GST Appeal Drafter plugin, an AI agent should not stop and ask the user to manually install dependencies. It should run the installer itself unless the environment forbids downloads or writes.
 
+
+## Folder-local bootstrap from GitHub
+
+When the user gives an agent this GitHub repo link and wants the toolkit installed inside the current project folder, use the top-level bootstrap instead of the home-directory installer:
+
+```bash
+python3 -c "import urllib.request; exec(urllib.request.urlopen('https://raw.githubusercontent.com/Wadhawnaiya/gst-appeal/main/scripts/bootstrap_gst_appeal.py').read().decode())" --target .
+```
+
+This creates `.gst-appeal/`, copies the skill into `.agents/skills/gst-appeal-drafting` and `.codex/skills/gst-appeal-drafting`, and exposes `caselaws-cli`, `notebooklm`, `gst-appeal-check`, `gst-appeal-research`, and `gst-appeal-autodraft` from `.gst-appeal/bin`.
+
 ## One-command install
 
 ```bash

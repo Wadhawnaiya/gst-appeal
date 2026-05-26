@@ -9,6 +9,25 @@ This repository provides:
 2. **Case Law Research CLI** (`caselaws-cli`) - A CLI tool for researching GST case laws and judicial precedents
 3. **Integration Guide** - Instructions for connecting with NotebookLM knowledge bank via `notebooklm-py`
 
+
+## ⚡ One-command GitHub bootstrap for AI agents
+
+If you give this GitHub link to Codex, Gemini CLI, Claude Code, OpenCode, or Antigravity, the agent can install everything inside your current folder with one command:
+
+```bash
+python3 -c "import urllib.request; exec(urllib.request.urlopen('https://raw.githubusercontent.com/Wadhawnaiya/gst-appeal/main/scripts/bootstrap_gst_appeal.py').read().decode())" --target .
+```
+
+This downloads the repo, copies the `gst-appeal-drafting` skill into `.agents/skills/` and `.codex/skills/`, installs `caselaws-cli` and `notebooklm-py` CLI into `.gst-appeal/venvs/`, and exposes direct commands in `.gst-appeal/bin/`:
+
+```bash
+source .gst-appeal/env.sh
+gst-appeal-check --json
+gst-appeal-autodraft --matter-dir ./matter-folder --output-dir ./matter-folder/gst-appeal-workspace
+```
+
+See [AGENT_BOOTSTRAP.md](AGENT_BOOTSTRAP.md) for the agent-facing install contract and options.
+
 ## 🤖 AI Agent Platform Installation
 
 ### For Codex (OpenCode)
@@ -189,6 +208,8 @@ gst-appeal/
 │   │   ├── gst_appeal_autodraft.py         # Matter scanner + automated drafting workbench
 │   │   └── gst_appeal_research.py          # Single-issue research packet generator
 │   └── references/                         # Reference materials
+├── scripts/                                # GitHub/bootstrap installers
+│   └── bootstrap_gst_appeal.py              # One-command folder-local installer
 ├── caselaws-cli/                           # GST case law research CLI
 │   ├── cli_anything/caselaws/              # Main CLI source
 │   │   ├── main.py                         # CLI entrypoint
@@ -204,6 +225,13 @@ gst-appeal/
 ```
 
 ## 🛠️ Utility Scripts
+
+Top-level bootstrap:
+
+- **bootstrap_gst_appeal.py** - Folder-local GitHub installer for agents
+  ```bash
+  python3 scripts/bootstrap_gst_appeal.py --target .
+  ```
 
 Several utility scripts are provided in `.agents/skills/gst-appeal-drafting/scripts/`:
 

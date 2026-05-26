@@ -45,6 +45,27 @@ demo/output/                                        # generated demo outputs
 
 ---
 
+
+## 0. Agent GitHub-link bootstrap
+
+If an AI agent is given only this repository link, it should install the toolkit into the current folder with:
+
+```bash
+python3 -c "import urllib.request; exec(urllib.request.urlopen('https://raw.githubusercontent.com/Wadhawnaiya/gst-appeal/main/scripts/bootstrap_gst_appeal.py').read().decode())" --target .
+```
+
+After installation:
+
+```bash
+source .gst-appeal/env.sh
+gst-appeal-check --json
+notebooklm auth check --test --json
+```
+
+The bootstrap creates `.gst-appeal/`, copies the skill to `.agents/skills/gst-appeal-drafting` and `.codex/skills/gst-appeal-drafting`, installs `caselaws-cli`, installs NotebookLM CLI, and writes direct wrapper commands.
+
+---
+
 ## 1. Component A — GST appeal drafting skill
 
 ### What it does
