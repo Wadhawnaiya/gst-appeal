@@ -91,15 +91,15 @@ caselaws-cli --help
 
 The `notebooklm-py` package is required for NotebookLM knowledge bank integration. It's available from this GitHub repository:
 
-**GitHub Repository:** https://github.com/Wadhawnaiya/notebooklm-py
+**GitHub Repository:** https://github.com/teng-lin/notebooklm-py
 
 ### Installation
 ```bash
 # Install from GitHub
-pip install git+https://github.com/Wadhawnaiya/notebooklm-py.git
+pip install git+https://github.com/teng-lin/notebooklm-py.git
 
 # Or clone and install manually
-git clone https://github.com/Wadhawnaiya/notebooklm-py.git
+git clone https://github.com/teng-lin/notebooklm-py.git
 cd notebooklm-py
 pip install -e .
 ```
