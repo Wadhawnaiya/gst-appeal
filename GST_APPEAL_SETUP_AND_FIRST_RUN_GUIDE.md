@@ -297,24 +297,39 @@ python3 .agents/skills/gst-appeal-drafting/scripts/install_dependencies.py --onl
 
 ---
 
-## 5. Generate a full GST research packet
+## 5. Generate a zero-touch appeal workspace
 
-Prepare facts in a Markdown file. Minimal example:
-
-```markdown
-# Facts
-
-- Forum: first appeal under section 107.
-- Issue: order under section 74 confirmed demand without discussing reply/evidence.
-- Jurisdiction: Gujarat.
-- Tax period: FY 2021-22.
-- Relief needed: set aside or remand for fresh adjudication after hearing.
-```
-
-Run:
+For a real matter, place notices/orders/replies/evidence in one folder, then run the automated workspace builder:
 
 ```bash
 cd /home/wadhawaniya/gst-appeal
+python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_autodraft.py \
+  --matter-dir demo-notice \
+  --forum "first appeal under CGST Act section 107" \
+  --jurisdiction Punjab \
+  --notebook "$NOTEBOOKLM_NOTEBOOK" \
+  --case-limit 3 \
+  --timeout 120 \
+  --output-dir demo-notice/gst-appeal-workspace
+```
+
+Open the drafting brief:
+
+```bash
+sed -n '1,220p' demo-notice/gst-appeal-workspace/appeal-drafting-brief.md
+```
+
+Expected behavior:
+
+- The script inventories documents and extracts text from text/Markdown/PDF/DOCX/images where available.
+- It creates NotebookLM prompt files and, when authenticated, NotebookLM result files.
+- It runs `caselaws-cli research` issue-by-issue and stores packets under `caselaw-research/`.
+- It writes `facts-digest.md`, `autodraft-summary.json`, and `appeal-drafting-brief.md`.
+- If NotebookLM is not authenticated, the workspace still captures extraction, prompts, case-law attempts, and clear warnings.
+
+For a single issue only, use:
+
+```bash
 python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_research.py \
   --issue "natural justice non-speaking order section 74" \
   --facts-file demo/first-run-facts.md \
@@ -324,17 +339,6 @@ python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_research.py \
   --timeout 120 \
   --output demo/output/research-packet.md
 ```
-
-Open the packet:
-
-```bash
-sed -n '1,220p' demo/output/research-packet.md
-```
-
-Expected behavior:
-
-- If NotebookLM is authenticated and `NOTEBOOKLM_NOTEBOOK` is set, the packet includes NotebookLM synthesis/source references.
-- If NotebookLM is not authenticated, the packet still runs case-law search and clearly reports the NotebookLM auth issue.
 
 ---
 
@@ -356,6 +360,8 @@ The demo will:
 5. Save outputs to `demo/output/`.
 6. Explain the NotebookLM login step if auth is missing.
 
+For a folder-based matter, prefer `gst_appeal_autodraft.py` over the older single-issue demo script.
+
 Demo output files:
 
 ```text
@@ -375,43 +381,25 @@ bash demo/first-run.sh
 
 ## 7. Recommended daily workflow
 
-### Step 1 — Start with facts
+### Step 1 — Start with a matter folder
 
-Create a matter file:
+Create a folder containing the SCN/DRC-01, reply, hearing records, impugned order/DRC-07, returns/reconciliations, challans/pre-deposit proof, authorization and annexures. Text, Markdown, PDF, DOCX and image files are supported best-effort.
 
-```bash
-cp demo/first-run-facts.md matter-facts.md
-nano matter-facts.md
-```
-
-Include:
-
-- order number/date/communication date,
-- forum/stage,
-- tax period,
-- demand breakup,
-- disputed issues,
-- SCN allegations,
-- reply/evidence filed,
-- order findings,
-- limitation/pre-deposit details,
-- relief needed.
-
-### Step 2 — Generate research packet
+### Step 2 — Generate the appeal workspace
 
 ```bash
-python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_research.py \
-  --issue "<issue + section + fact pattern>" \
-  --facts-file matter-facts.md \
+python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_autodraft.py \
+  --matter-dir ./matter-folder \
+  --forum "first appeal under CGST Act section 107" \
   --jurisdiction "<state/high court>" \
   --notebook "$NOTEBOOKLM_NOTEBOOK" \
-  --output matter-research-packet.md
+  --output-dir ./matter-folder/gst-appeal-workspace
 ```
 
 ### Step 3 — Ask Codex to draft
 
 ```text
-Use gst-appeal-drafting. Read matter-facts.md and matter-research-packet.md. Draft APL-01 statement of facts, grounds, written submissions, prayer, case-law table, and filing checklist. Mark all unverified authorities VERIFY BEFORE FILING.
+Use gst-appeal-drafting. Draft the appeal from ./matter-folder. Run the automated workspace if needed, read all NotebookLM and caselaw packets, verify selected authorities, then provide APL-01 statement of facts, grounds, written submissions, prayer, case-law table, filing checklist and professional-review caveats.
 ```
 
 ### Step 4 — Verify before filing

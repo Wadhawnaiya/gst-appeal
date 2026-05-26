@@ -5,102 +5,173 @@ description: Draft, review, or research Indian GST appeals using a connected Not
 
 # GST Appeal Drafting
 
-Use this skill to produce professional, evidence-grounded GST appeal drafts. It does **not** replace a Chartered Accountant/advocate review; always preserve citations, assumptions, and verification gaps.
+Use this skill to produce professional, evidence-grounded GST appeal drafts. It does **not** replace Chartered Accountant/advocate review; always preserve citations, assumptions, verification gaps, and filing caveats.
 
-## Required inputs
+## Core rule: first prompt should trigger the whole workflow
 
-Before final drafting, collect or infer from documents:
-- Forum/stage: first appeal under CGST Act section 107 / GSTAT / High Court / other.
-- Impugned order: date of communication, order number, issuing authority, tax periods, demand breakup.
-- Disputed issues: section/rule involved, facts found, assessee position, department reasoning.
-- Limitation and pre-deposit facts: filing deadline, condonation need, admitted dues paid, disputed tax pre-deposit.
-- Evidence: SCN, reply, hearing records, returns, reconciliation, ledgers, invoices, e-way bills, notices, DRC forms, challans, correspondence.
+When the user asks to draft, review, or prepare a GST appeal and provides a matter folder/documents, do **not** ask the user to run separate research commands. The agent must automatically:
 
-If any critical item is missing, continue with a clearly marked assumption and an “Information required before filing” list.
+1. check tool availability;
+2. scan the matter folder for SCN/order/reply/evidence/payment/authorization documents;
+3. extract facts and infer issues;
+4. run NotebookLM law-bank prompts for source-backed provisions, forms, grounds, risks, limitation/pre-deposit and filing checklist;
+5. run `caselaws-cli research` for each issue across NotebookLM, Indian Kanoon/search, CBIC/GST Council and adverse-risk queries;
+6. read the generated packets;
+7. fetch/read full text for authorities selected for citation;
+8. draft the appeal;
+9. fact-check, source-check, and proofread before final output.
 
-## Research-first workflow
+If a critical item is missing, continue with clearly marked assumptions and an “Information required before filing” list.
 
-1. **Check and self-install tool dependencies**
-   Agents must install missing CLIs automatically when the user asks to use this plugin on this laptop:
-   ```bash
-   python3 <skill>/scripts/check_environment.py --install --json
-   ```
-   Or install directly:
-   ```bash
-   python3 <skill>/scripts/install_dependencies.py --only all
-   ```
-   This installs/uses `caselaws-cli` from the local repo or `https://github.com/Wadhawnaiya/caselaws-cli` and `notebooklm` from `notebooklm-py[browser]`. The checker also detects the bundled `caselaws-cli/.venv/bin/notebooklm`. If NotebookLM is installed but not authenticated, run `notebooklm login`; Google sign-in requires human browser authentication.
+## Required inputs to collect or infer
 
-2. **NotebookLM law-bank extraction**
-   - Use the already-connected NotebookLM CLI or the `caselaws-cli --provider notebooklm` bridge. Prefer explicit notebook IDs via `--notebook` / `NOTEBOOKLM_NOTEBOOK`; avoid relying on shared `notebooklm use` state in parallel agents.
-   - Ask targeted questions, not broad “tell me GST law” prompts.
-   - Require source-backed answers with section/rule/circular/notification references and dates.
-   - Never paste client secrets or privileged material unless the user has authorized that NotebookLM notebook for the matter.
-   - Useful commands:
-     ```bash
-     notebooklm auth check --test --json
-     notebooklm metadata --notebook "$NOTEBOOKLM_NOTEBOOK" --json
-     notebooklm ask --notebook "$NOTEBOOKLM_NOTEBOOK" --json --prompt-file prompt.txt
-     caselaws-cli search "GST section 107 limitation pre deposit" --provider notebooklm --json --limit 5
-     ```
+- Forum/stage: first appeal under CGST/SGST Act section 107 / GSTAT / High Court / writ / other.
+- Impugned order: order number, issuing authority, date of order, date of communication/receipt, tax periods, demand breakup.
+- SCN/notice: form/number/date, allegations, proposed demand, statutory sections/rules, relied documents.
+- Assessee response: reply, evidence, reconciliations, hearing requests, hearing records, submissions.
+- Order findings: facts accepted/rejected, law applied, computation, penalty/interest reasoning, new grounds beyond SCN.
+- Limitation and pre-deposit: filing deadline, condonation need, admitted dues paid, disputed-tax/penalty pre-deposit, challans/DRC-03/DRC-03A.
+- Evidence: returns, ledgers, invoices, e-way bills, notices, DRC forms, challans, correspondence, authorization, certified/uploaded order copy.
 
-3. **Case-law research**
-   - Use `caselaws-cli search "<issue + section + fact pattern>" --json`.
-   - Use `--provider search` for broad web/index discovery, `--provider kanoon` for Indian Kanoon, `--provider cbic` for official CBIC circulars/notifications, and `--provider notebooklm` for your NotebookLM knowledge-bank.
-   - Prefer Supreme Court and jurisdictional High Court; then other High Courts, GSTAT/CESTAT analogies, AAAR/AAR only as persuasive and with caution.
-   - Fetch full text for the best hits with `caselaws-cli get <index-or-url> --json` before relying on them.
-   - Distinguish binding, persuasive, adverse, and distinguishable authorities.
+## Automated matter workflow
 
-4. **Generate a research packet**
-   ```bash
-   python3 <skill>/scripts/gst_appeal_research.py \
-     --issue "ITC mismatch between GSTR-2A and GSTR-3B" \
-     --facts-file facts.md \
-     --notebook "$NOTEBOOKLM_NOTEBOOK" \
-     --output research-packet.md
-   ```
-   Read the packet before drafting. The packet may contain NotebookLM synthesis, source references, broad case-law search hits, CBIC results, and verification warnings. Do not cite authorities that remain unverified.
+Run this first for a drafting/review task with a folder of notices/orders/evidence:
+
+```bash
+python3 <skill>/scripts/check_environment.py --install --json
+python3 <skill>/scripts/gst_appeal_autodraft.py \
+  --matter-dir <matter-folder> \
+  --forum "first appeal under CGST Act section 107" \
+  --jurisdiction "<State or High Court if known>" \
+  --notebook "$NOTEBOOKLM_NOTEBOOK" \
+  --output-dir <matter-folder>/gst-appeal-workspace
+```
+
+Notes:
+- Omit `--notebook` if the CLI already has `NOTEBOOKLM_NOTEBOOK` or an active notebook context.
+- Use `--issue "..."` for user-specified issues; the script also infers issues from documents.
+- Use `--fetch-top 1` only when the user wants slower full-text verification extracts during the automated run. Otherwise fetch selected authorities later.
+- Use `--skip-live-research` only for tests, offline environments, or when the user explicitly wants extraction without live NotebookLM/case-law calls.
+- By default the scanner ignores prior generated drafts/research folders (`case-laws/`, `research/`, `output/`, `gst-appeal-workspace/`) to avoid circular reasoning. Use `--include-generated` only when a prior draft/research packet is intentionally part of the review.
+
+After the command finishes, read:
+
+```text
+<matter-folder>/gst-appeal-workspace/facts-digest.md
+<matter-folder>/gst-appeal-workspace/appeal-drafting-brief.md
+<matter-folder>/gst-appeal-workspace/notebooklm-results/*.md
+<matter-folder>/gst-appeal-workspace/caselaw-research/*.md
+```
+
+The brief is not the final appeal; it is the intake and research workbench for the agent.
+
+## Tool dependency behavior
+
+Agents must install missing CLIs automatically when the user asks to use this plugin on this laptop:
+
+```bash
+python3 <skill>/scripts/check_environment.py --install --json
+```
+
+Or install directly:
+
+```bash
+python3 <skill>/scripts/install_dependencies.py --only all
+```
+
+This installs/uses `caselaws-cli` from the bundled/local repo or `https://github.com/Wadhawnaiya/caselaws-cli` and `notebooklm` from `notebooklm-py[browser]`. If NotebookLM is installed but not authenticated, run `notebooklm login`; Google sign-in requires human browser authentication.
+
+## NotebookLM law-bank extraction
+
+- Use the already-connected NotebookLM CLI or the `caselaws-cli --provider notebooklm` bridge. Prefer explicit notebook IDs via `--notebook` / `NOTEBOOKLM_NOTEBOOK`; avoid relying on shared `notebooklm use` state in parallel agents.
+- Ask targeted questions, not broad “tell me GST law” prompts.
+- Require source-backed answers with section/rule/circular/notification references, source titles/IDs, dates, caveats and supersession risks.
+- Never upload/paste privileged client material into NotebookLM unless the user has authorized that notebook for the matter. Reading from an already-authorized law notebook is fine.
+- Useful commands:
+  ```bash
+  notebooklm auth check --test --json
+  notebooklm metadata --notebook "$NOTEBOOKLM_NOTEBOOK" --json
+  notebooklm ask --notebook "$NOTEBOOKLM_NOTEBOOK" --json --timeout 120 --prompt-file prompt.txt
+  caselaws-cli search "GST section 107 appeal limitation" --provider notebooklm --json --limit 5
+  ```
+
+## Case-law and official-source research
+
+Use the integrated research command for issue-level packets:
+
+```bash
+caselaws-cli research "GST section 125 sign board penalty section 126 proportionality" \
+  --facts-file facts-digest.md \
+  --forum "first appeal under section 107" \
+  --jurisdiction "Punjab" \
+  --notebook "$NOTEBOOKLM_NOTEBOOK" \
+  --limit 5 \
+  --output research-packet.md
+```
+
+Provider discipline:
+- `notebooklm`: source-backed law-bank synthesis and source references.
+- `kanoon`: Indian Kanoon / court-oriented discovery.
+- `search`: broad web/index discovery, including GSTAT/CESTAT analogies.
+- `cbic`: official CBIC/GST Council circulars, notifications, rules, instructions.
+- Prefer Supreme Court and jurisdictional High Court; then other High Courts, GSTAT/CESTAT analogies; AAR/AAAR only as narrow persuasive material.
+- Fetch/read full text for selected hits with `caselaws-cli get <index-or-url> --json` before relying on them.
+- Distinguish binding, persuasive, adverse, and distinguishable authorities.
+
+The legacy single-issue helper remains available:
+
+```bash
+python3 <skill>/scripts/gst_appeal_research.py \
+  --issue "ITC mismatch between GSTR-2A and GSTR-3B" \
+  --facts-file facts.md \
+  --notebook "$NOTEBOOKLM_NOTEBOOK" \
+  --output research-packet.md
+```
 
 ## Drafting structure
 
-Use this order unless the forum rules require another format:
+Use this order unless forum rules require another format:
 
 1. **Cause title and party details**
 2. **Index / list of annexures**
 3. **Synopsis and list of dates**
 4. **Statement of facts** — neutral, chronological, numbered, evidence-linked; no arguments.
-5. **Grounds of appeal** — concise numbered legal errors. One ground per issue/error. Avoid argumentative submissions inside grounds.
-6. **Detailed written submissions** — where facts, law, circulars, and case law are applied.
-7. **Prayer / relief sought** — quashing, setting aside/modification, remand, stay/recovery relief, consequential relief, personal hearing.
+5. **Grounds of appeal** — concise numbered legal errors; one ground per issue/error.
+6. **Detailed written submissions** — facts, law, circulars, case law, application, relief.
+7. **Prayer / relief sought** — quashing/set aside/modification, deletion/recompute, remand, stay/recovery relief, consequential relief, personal hearing.
 8. **Verification**
 9. **Paper-book checklist and annexures**
-10. **Filing-risk checklist** — limitation, pre-deposit, certified copy, authorization, appeal fees, condonation, jurisdiction.
+10. **Filing-risk checklist** — limitation, pre-deposit, certified/uploaded copy, authorization, fees, condonation, jurisdiction, portal defects.
 
-For first appeals, ensure the draft is compatible with FORM GST APL-01 grounds and verification requirements.
+For first appeals, ensure compatibility with FORM GST APL-01 grounds and verification requirements.
 
-## Quality bar
+## Mandatory quality gate before final answer
 
-Load `references/icai-guide-principles.md` before preparing any appeal draft or appeal-review checklist.
+Load `references/icai-guide-principles.md` before preparing any appeal draft or review checklist.
 
-A good GST appeal draft must:
-- Separate facts, grounds, submissions, and prayers.
-- Attack the adjudication error, not the officer personally.
-- Tie each ground to record evidence and legal authority.
-- Preserve every factual concession and disputed amount clearly.
-- Include alternate/subsidiary grounds without contradiction.
-- Identify procedural violations: jurisdiction, limitation, natural justice, non-speaking order, non-consideration of reply/evidence, wrong section invoked, penalty mens rea where relevant.
-- Include a case-law table: citation, forum, holding, applicability, limits/adverse treatment, verification status.
-- Include an `ICAI-guide compliance check` in the final review checklist covering limitation proof, demand breakup, pre-deposit, SCN/reply/order mapping, order-beyond-SCN, additional evidence/grounds, case-law currency, and annexure discipline.
-- End with explicit filing caveats and professional-review notes.
-- Prefer “source-backed but not final” language for NotebookLM material until the underlying Act/rule/circular/judgment text has been independently checked.
+Before providing the final draft, perform and report this gate:
+
+- Facts, grounds, submissions, prayer and verification are separated.
+- SCN allegation → reply/evidence → order finding → error → relief is mapped for every major issue.
+- Demand breakup, admitted/disputed dues and pre-deposit are captured or flagged.
+- Limitation is computed from communication/receipt date or flagged.
+- Each legal proposition is tied to a provision/rule/circular/case/source or marked `VERIFY BEFORE FILING`.
+- Search-only cases are not cited as final authorities.
+- Selected authorities have full text/official source checked or their status is expressly not final.
+- Binding hierarchy and jurisdictional value are identified.
+- Adverse authorities/risks are identified and distinguished where possible.
+- Order-beyond-SCN, natural justice, non-speaking order, evidence ignored, jurisdiction, limitation, computation and penalty ingredients are checked.
+- Names, GSTIN, dates, order numbers, tax periods, forms, amounts and annexure labels are proofread.
+- The draft attacks the adjudication error, not the officer personally.
+- Filing caveats and professional-review notes are included.
 
 ## References to load as needed
 
-- `references/auto-installation.md` — automatic dependency installation rules for agents; load when tools are missing or when setting up a new laptop.
+- `references/auto-installation.md` — automatic dependency installation rules for agents.
 - `references/drafting-playbook.md` — detailed drafting architecture and model output format.
 - `references/research-protocol.md` — NotebookLM and caselaws-cli prompts/queries.
 - `references/source-map.md` — authoritative source hierarchy and key GST appeal provisions.
-- `references/templates.md` — appeal skeleton, grounds patterns, and case-law table.
+- `references/templates.md` — appeal skeleton, grounds patterns, case-law table, SCN/reply/order matrix.
 - `references/icai-guide-principles.md` — concise drafting and filing discipline derived from the ICAI Practical Guide to GST Adjudication and Appeals including GSTAT. Load this for all appeal drafting tasks.
 
 ## Output contract

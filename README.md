@@ -151,6 +151,32 @@ Use gst-appeal-drafting. Draft APL-01 grounds from this GST order demanding tax 
 @gst-appeal-drafting Research GST natural justice non-speaking order under section 74 using my GST appeal drafting skill.
 ```
 
+### 4. Zero-touch appeal workspace
+```bash
+# Scan notices/orders/evidence, create NotebookLM prompts, run case-law research,
+# and produce an appeal drafting brief for the agent.
+python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_autodraft.py \
+  --matter-dir ./your-matter-folder \
+  --forum "first appeal under CGST Act section 107" \
+  --jurisdiction "Gujarat" \
+  --notebook "$NOTEBOOKLM_NOTEBOOK" \
+  --output-dir ./your-matter-folder/gst-appeal-workspace
+
+# Read the generated brief before drafting
+sed -n '1,220p' ./your-matter-folder/gst-appeal-workspace/appeal-drafting-brief.md
+```
+
+### 5. Integrated issue research
+```bash
+caselaws-cli research "GST section 125 sign board penalty section 126 proportionality" \
+  --facts-file ./your-matter-folder/gst-appeal-workspace/facts-digest.md \
+  --forum "first appeal under section 107" \
+  --jurisdiction "Punjab" \
+  --notebook "$NOTEBOOKLM_NOTEBOOK" \
+  --limit 5 \
+  --output ./research-packet.md
+```
+
 ## 📁 Repository Structure
 
 ```
@@ -160,7 +186,8 @@ gst-appeal/
 │   ├── scripts/                            # Utility scripts
 │   │   ├── check_environment.py            # Environment checker
 │   │   ├── install_dependencies.py         # Dependency installer
-│   │   └── gst_appeal_research.py          # Research packet generator
+│   │   ├── gst_appeal_autodraft.py         # Matter scanner + automated drafting workbench
+│   │   └── gst_appeal_research.py          # Single-issue research packet generator
 │   └── references/                         # Reference materials
 ├── caselaws-cli/                           # GST case law research CLI
 │   ├── cli_anything/caselaws/              # Main CLI source
@@ -195,7 +222,15 @@ Several utility scripts are provided in `.agents/skills/gst-appeal-drafting/scri
    python3 .agents/skills/gst-appeal-drafting/scripts/install_dependencies.py --only notebooklm
    ```
 
-3. **gst_appeal_research.py** - Generates comprehensive research packets
+3. **gst_appeal_autodraft.py** - Creates the full matter workspace: document inventory, facts digest, NotebookLM prompts/results, case-law packets, and drafting brief
+   ```bash
+   python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_autodraft.py \
+     --matter-dir ./your-matter-folder \
+     --forum "first appeal under CGST Act section 107" \
+     --jurisdiction "State/High Court"
+   ```
+
+4. **gst_appeal_research.py** - Generates a single-issue research packet
    ```bash
    python3 .agents/skills/gst-appeal-drafting/scripts/gst_appeal_research.py \
      --issue "your legal issue" \

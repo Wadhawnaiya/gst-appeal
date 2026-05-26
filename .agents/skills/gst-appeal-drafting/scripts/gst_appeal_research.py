@@ -72,32 +72,34 @@ def caselaws_command() -> tuple[list[str] | None, Path | None]:
     configured = os.environ.get("CASELAWS_CLI")
     if configured:
         return shlex.split(configured), None
-    found = shutil.which("caselaws-cli")
-    if found:
-        return [found], None
+    # Prefer the bundled/workspace repo so newly edited integration commands are used
+    # before any older wrapper installed in ~/.local/bin or PATH.
     repo = DEFAULT_CASELAWS_REPO
     if (repo / "cli_anything" / "caselaws" / "main.py").exists():
         py = repo / ".venv" / "bin" / "python"
         if py.exists():
             return [str(py), "-m", "cli_anything.caselaws.main"], repo
         return ["python3", "-m", "cli_anything.caselaws.main"], repo
+    found = shutil.which("caselaws-cli")
+    if found:
+        return [found], None
     return None, None
 
 
 def notebooklm_command() -> tuple[list[str] | None, str]:
-    """Resolve NotebookLM CLI from explicit env, PATH, user wrapper, or bundled caselaws venv."""
+    """Resolve NotebookLM CLI from explicit env, PATH, bundled caselaws venv, or user wrapper."""
     configured = os.environ.get("NOTEBOOKLM_CLI")
     if configured:
         return shlex.split(configured), "NOTEBOOKLM_CLI"
     found = shutil.which("notebooklm")
     if found:
         return [found], "PATH"
-    user_wrapper = Path.home() / ".local" / "bin" / "notebooklm"
-    if user_wrapper.exists():
-        return [str(user_wrapper)], "~/.local/bin"
     bundled = DEFAULT_CASELAWS_REPO / ".venv" / "bin" / "notebooklm"
     if bundled.exists():
         return [str(bundled)], "caselaws-cli/.venv"
+    user_wrapper = Path.home() / ".local" / "bin" / "notebooklm"
+    if user_wrapper.exists():
+        return [str(user_wrapper)], "~/.local/bin"
     return None, "missing"
 
 

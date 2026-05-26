@@ -28,18 +28,19 @@ def caselaws_command() -> tuple[list[str] | None, str]:
     configured = os.environ.get("CASELAWS_CLI")
     if configured:
         return shlex.split(configured), "CASELAWS_CLI"
-    found = shutil.which("caselaws-cli")
-    if found:
-        return [found], "PATH"
-    user_wrapper = Path.home() / ".local" / "bin" / "caselaws-cli"
-    if user_wrapper.exists():
-        return [str(user_wrapper)], "~/.local/bin"
+    # Prefer bundled/workspace source before PATH so current repo integrations are tested.
     repo = DEFAULT_CASELAWS_REPO
     venv_python = repo / ".venv" / "bin" / "python"
     if (repo / "cli_anything" / "caselaws" / "main.py").exists() and venv_python.exists():
         return [str(venv_python), "-m", "cli_anything.caselaws.main"], f"repo:{repo}"
     if (repo / "cli_anything" / "caselaws" / "main.py").exists():
         return ["python3", "-m", "cli_anything.caselaws.main"], f"repo:{repo}"
+    found = shutil.which("caselaws-cli")
+    if found:
+        return [found], "PATH"
+    user_wrapper = Path.home() / ".local" / "bin" / "caselaws-cli"
+    if user_wrapper.exists():
+        return [str(user_wrapper)], "~/.local/bin"
     return None, "missing"
 
 
@@ -50,12 +51,12 @@ def notebooklm_command() -> tuple[list[str] | None, str]:
     found = shutil.which("notebooklm")
     if found:
         return [found], "PATH"
-    user_wrapper = Path.home() / ".local" / "bin" / "notebooklm"
-    if user_wrapper.exists():
-        return [str(user_wrapper)], "~/.local/bin"
     bundled = DEFAULT_CASELAWS_REPO / ".venv" / "bin" / "notebooklm"
     if bundled.exists():
         return [str(bundled)], "caselaws-cli/.venv"
+    user_wrapper = Path.home() / ".local" / "bin" / "notebooklm"
+    if user_wrapper.exists():
+        return [str(user_wrapper)], "~/.local/bin"
     return None, "missing"
 
 

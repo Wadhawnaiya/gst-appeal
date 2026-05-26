@@ -36,6 +36,22 @@ python3 <skill-root>/scripts/install_dependencies.py --only caselaws
 python3 <skill-root>/scripts/install_dependencies.py --only notebooklm
 ```
 
+
+## One-command appeal workspace after install
+
+After dependencies are available, agents should run the matter automation instead of asking the user to manually run NotebookLM/case-law commands:
+
+```bash
+python3 <skill-root>/scripts/gst_appeal_autodraft.py \
+  --matter-dir <matter-folder> \
+  --forum "first appeal under CGST Act section 107" \
+  --jurisdiction "<State/High Court if known>" \
+  --notebook "$NOTEBOOKLM_NOTEBOOK" \
+  --output-dir <matter-folder>/gst-appeal-workspace
+```
+
+The script writes `facts-digest.md`, NotebookLM prompt/result files, `caselaw-research/` packets, `autodraft-summary.json`, and `appeal-drafting-brief.md`. Read these artifacts before drafting.
+
 ## NotebookLM authentication
 
 The installer can download and install NotebookLM CLI automatically, but Google authentication requires a human browser login.
@@ -80,6 +96,7 @@ When this plugin is invoked:
 2. If `caselaws-cli` or `notebooklm` is missing, run `install_dependencies.py --only all` automatically.
 3. Re-run `check_environment.py --json`.
 4. If only NotebookLM authentication is missing, run `notebooklm login` or report that browser sign-in is required.
-5. Continue drafting/research once tools are available.
+5. For a drafting prompt with documents, run `gst_appeal_autodraft.py` automatically to create the appeal workspace.
+6. Read the workspace artifacts, fetch/check selected authorities, then draft.
 
 Do not cite case-law snippets as final authorities; fetch full text with `caselaws-cli get` before relying on a case.
